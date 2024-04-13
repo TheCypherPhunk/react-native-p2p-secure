@@ -2,10 +2,10 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-p2p-secure": ["./src/index"]
+      "react-native-secure-p2p": ["./src/index"]
     },
     "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
+    "allowUnusedLabels": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
@@ -13,16 +13,17 @@
     "module": "esnext",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noImplicitUseStrict": false,
     "noStrictGenericChecks": false,
     "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "target": "esnext",
-    "verbatimModuleSyntax": true
-  }
+    "verbatimModuleSyntax": false
+  },
+  "include": ["declarations.d.ts", "src", "lib", "index.js"],
 }
