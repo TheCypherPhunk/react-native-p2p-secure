@@ -1,6 +1,6 @@
 {
   "name": "react-native-p2p-secure",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A secure multipeer communication library to enable p2p communication between Android/iOS devices.",
   "main": "index.ts",
   "types": "lib/types/index.d.ts",

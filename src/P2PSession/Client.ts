@@ -205,11 +205,6 @@ export class Client extends P2PSession {
             this.eventEmitter.emit('node-error', error);
         });
 
-        this.node.on('message', (message, username) => {
-            // console.log('[Session] message - ', 'Message: ', message, ' From: ', username);
-            this.eventEmitter.emit('node-message', message, username);
-        });
-
         // console.log('[Session] clientConnect - ', 'Neighbor: ', JSON.stringify(neighbor));
     }
 
