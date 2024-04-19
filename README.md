@@ -2,6 +2,22 @@
 
 The first secure multipeer library to enable p2p communication between Android/iOS devices over WLAN or mobile hotspot for React Native. It allows you to create a secure peer-to-peer network between multiple devices, enabling them to communicate with each other securely. The library uses the Zeroconf protocol for peer discovery and the Secure Remote Password (SRP) protocol for secure authentication between peers. Once authenticated, the library establishes a secure peer-to-peer network between the devices, allowing them to communicate securely with each other.
 
+## Table of Contents
+- [How this works (in a nutshell)](#how-this-works-in-a-nutshell)
+- [Installation](#installation)
+    - [Android Platform](#android-platform)
+    - [iOS Platform](#ios-platform)
+- [Usage](#usage)
+    - [Client Example](#client-example)
+    - [Host Example](#host-example)
+    - [P2PNode Example](#p2pnode-example)
+- [API](#api)
+    - [P2PHost](#p2phost)
+    - [P2PClient](#p2pclient)
+    - [P2PNode](#p2pnode)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## How this works (in a nutshell)
 
  The network initially starts off with a client-server model with one device acting as a session host and the rest of the devices are clients who are actively looking for a session to join. Following the client-server model:
@@ -101,7 +117,7 @@ Import the library:
 import {P2PHost, P2PClient, P2PNode} from 'react-native-p2p-secure';
 ```
 
-Client Example:
+### Client Example:
 
 ```js
 const [client, setClient] = useState<P2PClient | null>(null);
@@ -143,7 +159,7 @@ client.connectSession(sessionConnectingTo as string, pin).then(() => { // attemp
 ```
 For a functional example, see the [example](./example/p2p_example/screens/JoinScreen.tsx) in the example folder.
 
-Host Example:
+### Host Example:
 
 ```jsx
 const [server, setServer] = useState<P2PHost | null>(null);
@@ -184,6 +200,7 @@ server.startP2PSession().then(() => { // starts the p2p session
 ```
 For a functional example, see the [example](./example/p2p_example/screens/HostScreen.tsx) in the example folder.
 
+### P2PNode Example:
 Once the p2p session has been successfully created, the host and clients can communicate with each other. At this point, the host and clients can can be casted to their shared base class `P2PNode` for more straighfoward usage. For example:
 
 ```js
