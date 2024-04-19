@@ -1,4 +1,4 @@
-import {Node, NodeInfo} from './Node';
+import {Node, NodeInfo, NodeMessage} from './Node';
 import forge from '../Utils/forge';
 import net from 'net';
 
@@ -15,6 +15,8 @@ export type ServerStartMessageEncryptedPayload = {
 }
 
 export class ServerNode extends Node {
+    ackedNeighbors: Set<string> = new Set();
+
     /**
      * Represents a ServerNode instance.
      * @constructor
@@ -45,7 +47,34 @@ export class ServerNode extends Node {
     private static handleClientMessage(instance:Node) {
         return (data: string, socket: net.Socket, connection: forge.tls.Connection) => {
             let self = instance as ServerNode;
-            self.handleMessage(data, socket, connection);
+            let dataJSON : NodeMessage;
+            dataJSON = JSON.parse(forge.util.decodeUtf8(data));
+            
+            if (dataJSON.type === 'ack-hello') {
+                console.log('[Node] handleClientMessage - ', 'Start Message Received');
+                console.log('[Node] handleClientMessage - ', 'Data: ', dataJSON);
+                let sender = dataJSON.from;
+                let neighbor = self.neighbors.get(sender);
+                if(!neighbor) {
+                    console.log('[Node] handleClientMessage - ', 'Error getting neighbor: ', sender);
+                    return;
+                } else if (neighbor.ip !== socket.remoteAddress) {
+                    console.log(`[Node] handleClientMessage - `, `Neighbor not authenticated, skipping hello. Neighbor: ${sender}`);
+                    console.log( `[Node] handleClientMessage - `, `Registered address for user ${sender}: ${neighbor.ip}:${neighbor.serverPort}`);
+                    console.log( `[Node] handleClientMessage - `, `Actual address for user ${sender}: ${socket.remoteAddress}:${socket.remotePort}`);
+                    return;
+                }
+
+                self.ackedNeighbors.add(sender);
+
+                if(self.ackedNeighbors.size === self.neighbors.size) {
+                    self.eventEmitter.emit('session-started');
+                    self.ackedNeighbors.clear();
+                }
+                
+            } else {
+                self.handleMessage(data, socket, connection);
+            }
         }
     }
 
@@ -72,7 +101,7 @@ export class ServerNode extends Node {
      * Sends a hello message to all neighbors. Neighbors receive this message to establish a connection with the other neighbor nodes along with the server node.
      */
     private sayHello() {
-        // console.log('[ServerNode] sayHello - ', 'Saying hello to neighbors');
+        console.log('[ServerNode] sayHello - ', 'Saying hello to neighbors');
         let helloMessage = this._generateHelloMessage();
         if(this.neighbors){
             this.neighbors.forEach((nodeInfo, username) => {
@@ -80,8 +109,7 @@ export class ServerNode extends Node {
                     this.sendMessage(helloMessage, username, 'hello');
                 }
             });
-            this.eventEmitter.emit('session-started');
-            // console.log('[ServerNode] sayHello - ', 'Hello messages sent')
+            console.log('[ServerNode] sayHello - ', 'Hello messages sent')
         }
     }
 
@@ -91,10 +119,10 @@ export class ServerNode extends Node {
     public start(): void {
         this.neighbors.forEach((neighbor, username) => {
             neighbor.tlsSocket.connect(neighbor.serverPort, neighbor.ip).then(()=>{
-                // console.log('[Node] start - ', 'Connecting to neighbor: ', username);
+                console.log('[Node] start - ', 'Connecting to neighbor: ', username);
             }).catch((error) => {
                 this.eventEmitter.emit('error', {error: error, metadata: {func: 'start', username: username}});
-                // console.log('[Node] start - ', 'Error connecting to neighbor: ', error);
+                console.log('[Node] start - ', 'Error connecting to neighbor: ', error);
             });
         });
         this.sayHello();    

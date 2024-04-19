@@ -94,4 +94,10 @@ export class DiscoveryServer {
     public on(event: 'published' | 'unpublished' | 'error', listener: (...args: any[]) => void) {
         this.eventEmitter.on(event, listener);
     }
+
+    public destroy() {
+        this.zeroconf.unpublishService(this.serviceName);
+        this.zeroconf.removeDeviceListeners();
+        this.eventEmitter.removeAllListeners();
+    }
 }

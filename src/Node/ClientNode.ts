@@ -97,6 +97,8 @@ export class ClientNode extends Node {
                         // console.log('[Node] start - ', 'Error connecting to neighbor: ', error);
                     });
                 });
+
+                self.sendMessage('', sender, 'ack-hello');
             } else {
                 self.handleMessage(data, socket, connection);
             }

@@ -14,7 +14,7 @@ export type ServerStartMessage = {
 }
 
 export type NodeMessage = {
-    type: 'message' | 'hello' | 'broadcast',
+    type: 'message' | 'hello' | 'broadcast' | 'ack-hello',
     encryptedMessage: string,
     iv: string,
     from: string
@@ -162,7 +162,7 @@ export class Node {
      * If the encryption fails, an error message is logged and an empty string is returned.
      * The encrypted message is sent over a TLS socket connection.
      */
-    public async sendMessage(message: string, username: string, messageType: 'message' | 'broadcast' | 'hello' = 'message') {
+    public async sendMessage(message: string, username: string, messageType: 'message' | 'broadcast' | 'hello' | 'ack-hello' = 'message') {
         let neighbor = this.neighbors.get(username);
 
         if (neighbor) {
@@ -421,7 +421,7 @@ export class Node {
      * This method destroys the current TLS server and rebuilds it.
      * It also reconnects all the neighbors to the node.
      */
-    public async reconnect() {
+    private async reconnect() {
         if(this.reconnecting) { return }
 
         this.reconnecting = true;
@@ -516,10 +516,19 @@ export class Node {
         return deferredPromise;
     }
 
+    /**
+     * Checks if the neighbor is disconnected.
+     * @param username The username of the neighbor to check.
+     * @returns A boolean value indicating if the neighbor is disconnected.
+     */
     private _isNeighborDisconnected(username: string) {
         return this.neighbors.get(username)!.disconnected || this.neighbors.get(username)!.softDisconnected;
     }
 
+    /**
+     * Destroys the node.
+     * @returns A promise that resolves when the node is destroyed.
+     */
     public destroy() {
         return new Promise<void>(async (resolve, reject) => {
             // console.log('[Node.ts][destroy] Destroying node');

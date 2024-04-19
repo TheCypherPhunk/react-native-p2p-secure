@@ -428,6 +428,11 @@ export class CoordinatorServer {
     public on(event: 'connection-attempt' | 'connection-attempt-fail' | 'connected' | 'disconnected' | 'reconnected', callback: (...args: any[]) => void) {
         this.eventEmitter.addListener(event, callback);
     }
+
+    public destroy() {
+        this.tlsServer.destroy();
+        this.eventEmitter.removeAllListeners();
+    }
 }
 
 export default CoordinatorServer;

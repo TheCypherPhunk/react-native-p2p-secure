@@ -1,17 +1,12 @@
-
 import './shim.js'
 import crypto from 'crypto'
-import {Node} from './src/Node';
+
 import {Client} from './src/P2PSession';
 import {Host} from './src/P2PSession';
-import type {DiscoveryClientService} from './src/Discovery';
+import { P2PSession } from './src/P2PSession';
 
 export {
-    Node as P2PNode,
+    P2PSession as P2PNode,
     Client as P2PClient,
     Host as P2PHost,
-};
-
-export type { 
-    DiscoveryClientService as P2PSessionType
 };

@@ -194,4 +194,10 @@ export class DiscoveryClient {
     public on(event: 'start' | 'stop' | 'error' | 'service-list-update', callback: (...args: any[]) => void) {
         this.eventEmitter.on(event, callback);
     }
+
+    public destroy() {
+        this.zeroconf.stop();
+        this.zeroconf.removeDeviceListeners();
+        this.eventEmitter.removeAllListeners();
+    }
 }

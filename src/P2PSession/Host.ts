@@ -9,35 +9,29 @@ import { NodeInfo } from '../Node';
 import { EventEmitter } from 'events';
 import forge from '../Utils/forge';
 import crypto from 'crypto';
+import { P2PSession } from './P2PSession';
 
-export class Host {
+export class Host extends P2PSession {
     private Discovery: DiscoveryServer;
     private Coordinator: CoordinatorServer;
-    private identifier: string;
-    private node!: ServerNode;
-    private nodePort: number;
-    private eventEmitter: EventEmitter;
-    private nodeKeysPromise : Promise<forge.pki.rsa.KeyPair>;
 
-
+    /**
+     * Constructs a new Host instance.
+     * 
+     * @param Discovery - The DiscoveryServer instance.
+     * @param Coordinator - The CoordinatorServer instance.
+     * @param sessionName - The name of the session.
+     * @param nodePort - The port number of the node.
+     * @returns A new Host instance.
+     * 
+     * @remarks
+     * This constructor is private and should not be called directly.
+     * To create a new Host instance, use the static create method.
+     */
     private constructor(Discovery: DiscoveryServer, Coordinator: CoordinatorServer, sessionName: string, nodePort: number) {
+        super(sessionName, nodePort);
         this.Discovery = Discovery;
         this.Coordinator = Coordinator;
-        this.identifier = sessionName;
-
-        this.nodePort = nodePort;
-        this.nodeKeysPromise = new Promise<forge.pki.rsa.KeyPair>((resolve, reject) => {
-            setTimeout(() => {
-                forge.pki.rsa.generateKeyPair({bits: 2048, workers: -1}, (err, keypair) => {
-                    if(err) {
-                        reject(err);
-                    }
-                    resolve(keypair);
-                });
-            });
-        });
-
-        this.eventEmitter = new EventEmitter();
 
         this.Coordinator.on('connection-attempt', (username) => {
             // console.log('[Host] connection-attempt - ', 'Connection attempt: ', username);
@@ -81,7 +75,12 @@ export class Host {
 
     }
 
-
+    /**
+     * Creates a new Host instance.
+     * @param discoveryServiceType - The type of the discovery service.
+     * @param username - The username of the host.
+     * @returns - A promise that resolves with the created Host instance.
+     */
     public static async create(discoveryServiceType: string, username?: string) {
         // console.log('[Host] create - ', 'Creating Host');
         let identifier = username == null? proquint.encode(crypto.randomBytes(4)) : username;
@@ -111,11 +110,25 @@ export class Host {
         return new Host(discoveryServer, coordinatorServer, identifier, nodePort);
     }
 
+    /**
+     * Starts the Host instance.
+     * 
+     * @remarks
+     * This method should be called after creating a new Host instance to start the discovery and coordinator servers.
+     * The discovery server will start advertising the service, and the coordinator server will start listening for connections.
+     */
     public start() {
         this.Coordinator.start();
         this.Discovery.start();
     }
 
+    /**
+     * Starts the P2P session.
+     * 
+     * @remarks
+     * This method should be called after starting the Host instance and all neighbors have connected to the host.
+     * It will start the P2P session by creating a new ServerNode instance and connecting to all neighbors. 
+     */
     public async startP2PSession() {
         let neighbors = (this.Coordinator as CoordinatorServer).exportUsers();
         // console.log('[Host] serverConnect - ', 'Neighbors: ', JSON.stringify(neighbors));
@@ -131,13 +144,18 @@ export class Host {
             }
         });
 
-        let nodeKeys = await this.nodeKeysPromise;
+        let nodeKeys = await this.getNodeKeys();
         // console.log('[Host] serverConnect - ', 'NeighborsInfo: ', JSON.stringify(neighborsInfo));
         this.node = new ServerNode(this.identifier, this.nodePort, nodeKeys, neighborsInfo)
 
         this.node.on('message', (message, username) => {
             // console.log('[Host] message - ', 'Message: ', message, ' From: ', username);
             this.eventEmitter.emit('node-message', message, username);
+        });
+
+        this.node.on('connected', (username) => {
+            // console.log('[Host] connected - ', 'Connected: ', username);
+            this.eventEmitter.emit('node-connected', username);
         });
 
         this.node.on('disconnected', (username) => {
@@ -150,57 +168,93 @@ export class Host {
             this.eventEmitter.emit('node-reconnected', username);
         });
 
+        this.node.on('error', (error) => {
+            // console.log('[Host] error - ', 'Error: ', error);
+            this.eventEmitter.emit('node-error', error);
+        });
+
         this.node.on('session-started', () => {
             // console.log('[Host] session-started - ', 'Session started');
-            this.stop();
+            this.stopAdvertising();
             this.eventEmitter.emit('session-started');
         });
 
-        this.node.start();
+        (this.node as ServerNode).start();
 
     }
 
-    public reconnect() {
-        this.node.reconnect();
-    }
-
-    public broadcast(message: string) {
-        this.node.broadcastMessage(message);
-    }    
-    
-    public send(message: string, username: string) {
-        this.node.sendMessage(message, username);
-    }
-
+    /**
+     * Stops the Host instance.
+     * 
+     * @remarks
+     * This method should be called to stop the discovery and coordinator servers.
+     */
     public getNeighbors() {
         return this.node.getNeighbors();
     }
 
-    public on(event: 'node-message' | 'node-disconnected' | 'node-reconnected' | 'coordinator-connection-start' | 'coordinator-connection-fail' |'coordinator-connected' | 'coordinator-disconnected' | 'coordinator-reconnected' | 'discovery-published' | 'discovery-unpublished' | 'discovery-error' | 'session-started', callback: (...args: any[]) => void) {
+    /**
+     * Registers a listener function to be called when the specified event is emitted.
+     * @param event The event to listen for.
+     * @param callback A callback function to be called when the event is emitted.
+     * 
+     * @remarks
+     * The following events can be listened for:
+     * - 'session-started': Emitted when the p2p session is started.
+     * - 'node-connected': Emitted when a neighbor node connects to the host in the p2p network.
+     * - 'node-disconnected': Emitted when a neighbor node disconnects from the host in the p2p network.
+     * - 'node-reconnected': Emitted when a neighbor node reconnects to the host in the p2p network.
+     * - 'node-error': Emitted when an error occurs in the node.
+     * - 'node-message': Emitted when a message is received from a neighbor node in the p2p network.
+     * - 'node-message': Emitted when a message is received from a neighbor node in a p2p session.
+     * - 'node-disconnected': Emitted when a neighbor node disconnects from the host.
+     * - 'node-reconnected': Emitted when a neighbor node reconnects to the host.
+     * - 'coordinator-connection-start': Emitted when the coordinator server starts a connection attempt to a neighbor node.
+     * - 'coordinator-connection-fail': Emitted when the coordinator server fails to connect to a neighbor node.
+     * - 'coordinator-connected': Emitted when the coordinator server successfully connects to a neighbor node.
+     * - 'coordinator-disconnected': Emitted when the coordinator server disconnects from a neighbor node.
+     * - 'coordinator-reconnected': Emitted when the coordinator server reconnects to a neighbor node.
+     * - 'discovery-published': Emitted when the discovery server publishes the service.
+     * - 'discovery-unpublished': Emitted when the discovery server unpublishes the service.
+     * - 'discovery-error': Emitted when an error occurs in the discovery server.
+     */
+    public on(event: 'session-started' | 'node-connnected' | 'node-disconnected' | 'node-reconnected' | 'node-error' | 'node-message' | 'coordinator-connection-start' | 'coordinator-connection-fail' |'coordinator-connected' | 'coordinator-disconnected' | 'coordinator-reconnected' | 'discovery-published' | 'discovery-unpublished' | 'discovery-error', callback: (...args: any[]) => void) {
         this.eventEmitter.on(event, callback);
     }
 
-    private stop() {
+    /**
+     * Stops the coordinator and discovery servers.
+     * 
+     * @remarks
+     * This method should be called to stop the discovery and coordinator servers.
+     * It will stop the servers and close all connections. This method should be called when the host is no longer needed and the node has been connected to all neighbors.
+     * The host instance should be discarded after calling this method.
+     */
+    private stopAdvertising() {
         this.Coordinator.stop();
         this.Discovery.stop();
     }
 
+    /**
+     * Returns the passcode for the session.
+     * @returns The passcode for the session.
+     */
     get sessionPasscode() {
         return (this.Coordinator as CoordinatorServer).passcode;
     }
 
+    /**
+     * Returns the identifier for the host.
+     * @returns The identifier for the host.
+     */
     get identifierString() {
         return this.identifier;
     }
 
-    get connectedNeighbors() {
-        return (this.Coordinator as CoordinatorServer).exportUsers().map((neighbor) => {
-            return neighbor.userName;
-        });
-    }
-
-    public getNode() {      
-        return this.node;
+    public destroy(): void {
+        super.destroy();
+        this.Coordinator.destroy();
+        this.Discovery.destroy();
     }
 }
 

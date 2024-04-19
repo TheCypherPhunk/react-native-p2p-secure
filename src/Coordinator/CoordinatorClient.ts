@@ -19,6 +19,7 @@ export class CoordinatorClient {
     private identifier: string;
     private rsaKeys: forge.pki.rsa.KeyPair;
     private eventEmitter: EventEmitter;
+    private tlsClient!: TLSClient;
 
     static readonly rsaKeyLength = 2048;
     /**
@@ -67,7 +68,11 @@ export class CoordinatorClient {
         nodePort: number
     ): Promise<SRPHandshakeResult> {
         let srpClient = new SRPClient(this.identifier, password);
+        if(this.tlsClient) {
+            this.tlsClient.destroy();
+        }
         let client = new TLSClient(sessionName, this.rsaKeys);
+        this.tlsClient = client;
 
         return new Promise((resolve, reject) => {
             client.on('tls-connected', () => {
@@ -153,6 +158,11 @@ export class CoordinatorClient {
      */
     public on(event: 'connected' | 'authenticated' | 'error' | 'disconnected', callback: (...args: any[]) => void) {
         this.eventEmitter.addListener(event, callback);
+    }
+
+    public destroy() {
+        this.tlsClient.destroy();
+        this.eventEmitter.removeAllListeners();
     }
 }
 

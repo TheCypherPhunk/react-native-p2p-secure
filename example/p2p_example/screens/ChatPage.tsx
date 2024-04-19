@@ -51,17 +51,17 @@ export default function ChatScreen({route, navigation}: any) {
         });
     
         nodeContext.on('disconnected', (username: string) => {
-            console.log('Connection Closed', 'The connection to ' + username + ' has been closed. You will need to reconnect.', [{text: 'Reconnect', onPress: () => nodeContext.reconnect()}, {text: 'Close'}]);        
+            console.log('Connection Closed', 'The connection to ' + username + ' has been closed.');        
             setNeighborStatus(nodeContext.getNeighborStatus());
         });    
 
         nodeContext.on('connected', (username: string) => {
-            console.log('Connection Open', 'The connection to ' + username + ' has been established.', [{text: 'Close'}]);
+            console.log('Connection Open', 'The connection to ' + username + ' has been established.');
             setNeighborStatus(nodeContext.getNeighborStatus());
         });
 
         nodeContext.on('reconnected', (username: string) => {
-            console.log('Connection Reopened', 'The connection to ' + username + ' has been reestablished.', [{text: 'Close'}]);
+            console.log('Connection Reopened', 'The connection to ' + username + ' has been reestablished.');
             setNeighborStatus(nodeContext.getNeighborStatus());
         });
     }, []);
@@ -103,9 +103,6 @@ export default function ChatScreen({route, navigation}: any) {
                             </View>
                         )}
                     />
-                    {/* <TouchableOpacity style={styles.button} onPress={() => {nodeContext.reconnect()}}>
-                        <Text style={{color: 'white'}}>Reconnect</Text>
-                    </TouchableOpacity> */}
                 </View>
             </Modal>
         )
