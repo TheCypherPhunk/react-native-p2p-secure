@@ -505,7 +505,11 @@ export class Node {
                     // console.log('[Node.ts][reconnect] Connected to neighbor: ' + username);
                     resolve();
                 }).catch(() => {
-                    this.eventEmitter.emit('error', {error: 'Error connecting to neighbor', metadata: { fn: 'reconnect_user',username: username}});
+                    try{
+                        this.eventEmitter.emit('error', {error: 'Error connecting to neighbor', metadata: { fn: 'reconnect_user',username: username}});
+                    } catch(e) {
+                        // console.log('[Node.ts][reconnect] Error emitting error event', e);
+                    }
                     // console.log('[Node.ts][reconnect] Error connecting to neighbor: ' + username, error);
                     resolve();
                 });  
@@ -533,6 +537,11 @@ export class Node {
         return new Promise<void>(async (resolve, reject) => {
             // console.log('[Node.ts][destroy] Destroying node');
             await this.tlsServer.destroy();
+
+            for (let [username, neighbor] of this.neighbors.entries()) {
+                // console.log('[Node.ts][destroy] Destroying neighbor: ', username);
+                await neighbor.tlsSocket.destroy();
+            }
         
             this.eventEmitter.removeAllListeners();
             // console.log('[Node.ts][destroy] Node destroyed');

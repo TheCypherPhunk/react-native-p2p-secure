@@ -428,9 +428,6 @@ export class TLSServer {
         }
 
         setTimeout(() => {
-            this.tlsMap.forEach((tls) => {
-                tls.close();
-            });
 
             this.server.close(() => {
                 this.server.removeAllListeners();
@@ -442,7 +439,13 @@ export class TLSServer {
                 });
             });
 
+            this.tlsMap.forEach((tls) => {
+                tls.close();
+            });
 
+            this.tcpMap.forEach((socket) => {
+                socket.destroy();
+            });
 
         }, 0);
         return deferredPromise;
