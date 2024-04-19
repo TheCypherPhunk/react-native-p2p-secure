@@ -84,11 +84,18 @@ export abstract class P2PSession {
     }
 
     /**
-     * Registers a callback function to be executed when the specified event occurs.
+     * Registers a callback function to be executed when the specified event occurs. This method is used to listen for node events.
      * @param event The name of the event to listen for.
      * @param callback The callback function to be executed when the event occurs.
+     * Available events:
+     * - 'session-started': Emitted when the session is started.
+     * - 'node-connected': Emitted when a node is connected.
+     * - 'node-disconnected': Emitted when a node is disconnected.
+     * - 'node-reconnected': Emitted when a node is reconnected.
+     * - 'node-error': Emitted when an error occurs with a node.
+     * - 'node-message': Emitted when a message is received from a node.
      */
-    public on(event: 'session-started' | 'node-connected' | 'node-disconnected' | 'node-reconnected' | 'node-error' | 'node-message' | string , callback: (...args: any[]) => void) {
+    public onNodeEvent(event: 'session-started' | 'node-connected' | 'node-disconnected' | 'node-reconnected' | 'node-error' | 'node-message' , callback: (...args: any[]) => void) {
         this.eventEmitter.on(event, callback);
     }
 
