@@ -504,7 +504,7 @@ export class Node {
                 tlsClient.connect(neighbor.serverPort, neighbor.ip).then(() => {
                     // console.log('[Node.ts][reconnect] Connected to neighbor: ' + username);
                     resolve();
-                }).catch((error) => {
+                }).catch(() => {
                     this.eventEmitter.emit('error', {error: 'Error connecting to neighbor', metadata: { fn: 'reconnect_user',username: username}});
                     // console.log('[Node.ts][reconnect] Error connecting to neighbor: ' + username, error);
                     resolve();
