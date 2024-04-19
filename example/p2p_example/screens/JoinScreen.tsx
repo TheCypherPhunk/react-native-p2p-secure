@@ -15,9 +15,10 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native'
-import { P2PClient, P2PSessionType } from 'react-native-p2p-secure'
+import { P2PClient } from 'react-native-p2p-secure'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
 import { NodeContext } from '../P2PContexts'
+import React from 'react';
 export default function JoinScreen({route, navigation}: any) {
 
     const [client, setClient] = useState<P2PClient>(null!); // Change type to Session
@@ -52,12 +53,12 @@ export default function JoinScreen({route, navigation}: any) {
 
             session.on('discovery-service-list-update', (updatedSessions) => {
                 console.log('sessions', updatedSessions);
-                setSessions(sessions => [...updatedSessions.map((s: P2PSessionType) => s.name)]);
+                setSessions(sessions => [...updatedSessions]);
             })
             session.on('session-started', () => {
                 setDisconnectedModalVisible(false);
                 setLoading(true);
-                navigation.navigate('Chat', {sessionID, neighbors: nodeNeighbors})
+                navigation.replace('Chat', {sessionID, neighbors: nodeNeighbors})
             });
             session.on('coordinator-error', (error) => {
                 Alert.alert('Error', error);
@@ -136,7 +137,7 @@ export default function JoinScreen({route, navigation}: any) {
                                 setNodeNeighbors(client.getNeighbors());
                                 setConnectedToSession(true);
 
-                                setNodeContext(client.getNode());
+                                setNodeContext(client);
                             })
                         }}
                     >

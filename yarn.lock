@@ -2974,6 +2974,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/typescript-config@npm:^0.75.0-main":
+  version: 0.75.0-nightly-20240419-73b4d67a7
+  resolution: "@react-native/typescript-config@npm:0.75.0-nightly-20240419-73b4d67a7"
+  checksum: b609edc9f4861ba2665ec8a63324a4ad302324287fe9d20551a40d1366a5b89790a472a0d51d1b042f13dd433c3c61f45ea150a032a94235f3b8381386984541
+  languageName: node
+  linkType: hard
+
 "@react-native/virtualized-lists@npm:0.73.4":
   version: 0.73.4
   resolution: "@react-native/virtualized-lists@npm:0.73.4"
@@ -11333,6 +11340,7 @@ __metadata:
     "@commitlint/config-conventional": ^17.0.2
     "@evilmartians/lefthook": ^1.5.0
     "@react-native/eslint-config": ^0.73.1
+    "@react-native/typescript-config": ^0.75.0-main
     "@release-it/conventional-changelog": ^5.0.0
     "@types/jest": ^29.5.5
     "@types/react": ^18.2.44
@@ -11350,7 +11358,7 @@ __metadata:
     react-native-builder-bob: ^0.20.0
     react-native-crypto: ^2.2.0
     react-native-modpow: ^1.1.0
-    react-native-randombytes: ^3.6.1
+    react-native-randombytes: 3.6.1
     react-native-tcp: ^3.3.2
     react-native-tcp-socket: ^6.0.6
     react-native-zeroconf: ^0.13.8
@@ -11369,7 +11377,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-randombytes@npm:^3.6.1":
+"react-native-randombytes@npm:3.6.1":
   version: 3.6.1
   resolution: "react-native-randombytes@npm:3.6.1"
   dependencies:

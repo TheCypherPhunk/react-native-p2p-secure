@@ -11,7 +11,7 @@ import HostScreen from "./screens/HostScreen";
 import JoinScreen from "./screens/JoinScreen";
 import ChatScreen from "./screens/ChatPage";
 import { NodeContext } from "./P2PContexts";
-import { P2PNode } from "react-native-secure-p2p";
+import { P2PNode } from "react-native-p2p-secure";
 
 function HomeScreen({navigation}: {navigation: NavigationProp<any>}) {
   return (

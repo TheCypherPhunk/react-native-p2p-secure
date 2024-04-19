@@ -12,6 +12,9 @@ import {
  } from 'react-native';
 import { Text } from 'react-native';
 import { NodeContext, useNodeContext } from '../P2PContexts';
+import React from 'react';
+import { HeaderBackButton } from '@react-navigation/elements';
+
 
 export default function ChatScreen({route, navigation}: any) {
 
@@ -45,25 +48,26 @@ export default function ChatScreen({route, navigation}: any) {
     }
 
     useEffect(() => {
-        nodeContext.on('message', (message:string, sender:string) => {
+        nodeContext.onNodeEvent('node-message', (message:string, sender:string) => {
             console.log('message', message, 'sender', sender);
             updateChatter(sender, message);
         });
     
-        nodeContext.on('disconnected', (username: string) => {
-            console.log('Connection Closed', 'The connection to ' + username + ' has been closed.');        
+        nodeContext.onNodeEvent('node-disconnected', (username: string) => {
+            console.log('Connection Closed', 'The connection to ' + username + ' has been closed. You will need to reconnect.');        
             setNeighborStatus(nodeContext.getNeighborStatus());
         });    
 
-        nodeContext.on('connected', (username: string) => {
+        nodeContext.onNodeEvent('node-connected', (username: string) => {
             console.log('Connection Open', 'The connection to ' + username + ' has been established.');
             setNeighborStatus(nodeContext.getNeighborStatus());
         });
 
-        nodeContext.on('reconnected', (username: string) => {
+        nodeContext.onNodeEvent('node-reconnected', (username: string) => {
             console.log('Connection Reopened', 'The connection to ' + username + ' has been reestablished.');
             setNeighborStatus(nodeContext.getNeighborStatus());
         });
+
     }, []);
 
     useEffect(() => {
@@ -75,6 +79,15 @@ export default function ChatScreen({route, navigation}: any) {
             ),
         });
         }, [navigation])
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', e => {
+            e.preventDefault(); // Prevent default action
+            unsubscribe() // Unsubscribe the event on first call to prevent infinite loop
+            nodeContext.destroy();
+            navigation.navigate('Home') // Navigate to your desired screen
+        });
+    }, [])
 
     const onSend = useCallback((messages = []) => {
         setChatter(previousMessages =>
@@ -103,6 +116,9 @@ export default function ChatScreen({route, navigation}: any) {
                             </View>
                         )}
                     />
+                    {/* <TouchableOpacity style={styles.button} onPress={() => {nodeContext.reconnect()}}>
+                        <Text style={{color: 'white'}}>Reconnect</Text>
+                    </TouchableOpacity> */}
                 </View>
             </Modal>
         )

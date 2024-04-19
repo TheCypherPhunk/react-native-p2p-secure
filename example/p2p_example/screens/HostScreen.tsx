@@ -18,6 +18,7 @@ import {
 import { P2PHost } from 'react-native-p2p-secure'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
 import { NodeContext } from '../P2PContexts';
+import React from 'react';
 
 
 
@@ -87,8 +88,8 @@ export default function HostScreen({route, navigation}: any) {
                     Alert.alert('Connection to ' + neighbor + ' failed.', error);
                 });
                 session.on('session-started', () => {
-                    setNodeContext(session.getNode());
-                    navigation.navigate('Chat', {sessionID, neighbors: nodeNeighbors});
+                    setNodeContext(session);
+                    navigation.replace('Chat', {sessionID, neighbors: nodeNeighbors});
                 });
                 session.start();
                 setLoading(false);
