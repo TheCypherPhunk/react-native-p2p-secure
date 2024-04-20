@@ -107,4 +107,11 @@ export abstract class P2PSession {
         this.eventEmitter.removeAllListeners();
     }
 
+    /**
+     * Returns the identifier for the host/client.
+     * @returns The identifier for the host/client.
+     */
+        get identifierString() {
+            return this.identifier;
+        }
 }

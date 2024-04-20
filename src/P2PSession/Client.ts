@@ -216,13 +216,6 @@ export class Client extends P2PSession {
     }
 
     /**
-     * getNeighbors - Gets the neighbors of the client node in the active p2p network.
-     */
-    public getNeighbors() {
-        return this.node.getNeighbors();
-    }
-
-    /**
      * Registers a callback function to be called when a specific event occurs.
      * @param event The event name ('session-started', 'node-message', 'node-disconnected', 'node-reconnected', 'discovery-start', 'discovery-stop', 'discovery-error', 'discovery-service-list-update', 'coordinator-connected', 'coordinator-authenticated', 'coordinator-error', 'coordinator-disconnected').
      * @param callback The callback function to be called when the event occurs.
@@ -246,13 +239,6 @@ export class Client extends P2PSession {
      */
     public on(event: 'session-started' | 'node-connnected' | 'node-disconnected' | 'node-reconnected' | 'node-error' | 'node-message' | 'discovery-start' | 'discovery-stop' | 'discovery-error' | 'discovery-service-list-update' | 'coordinator-connected' | 'coordinator-authenticated' | 'coordinator-error' | 'coordinator-disconnected', callback: (...args: any[]) => void) {
         this.eventEmitter.on(event, callback);
-    }
-
-    /** 
-     * Gets the username used to identify the client in the p2p network.
-     */
-    get identifierString() {
-        return this.identifier;
     }
 
     public destroy() {

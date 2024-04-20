@@ -25,5 +25,5 @@
     "target": "esnext",
     "verbatimModuleSyntax": false
   },
-  "include": ["declarations.d.ts", "src", "lib", "index.ts"],
+  "include": ["declarations.d.ts", "src", "lib", "index.ts", "__tests__"],
 }

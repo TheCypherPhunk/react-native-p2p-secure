@@ -184,16 +184,6 @@ export class Host extends P2PSession {
     }
 
     /**
-     * Stops the Host instance.
-     * 
-     * @remarks
-     * This method should be called to stop the discovery and coordinator servers.
-     */
-    public getNeighbors() {
-        return this.node.getNeighbors();
-    }
-
-    /**
      * Registers a listener function to be called when the specified event is emitted.
      * @param event The event to listen for.
      * @param callback A callback function to be called when the event is emitted.
