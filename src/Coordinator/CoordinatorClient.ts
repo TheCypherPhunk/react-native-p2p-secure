@@ -146,7 +146,7 @@ export class CoordinatorClient {
     }
 
     public destroy() {
-        this.tlsClient.destroy();
+        this.tlsClient? this.tlsClient.destroy() : null;
         this.eventEmitter.removeAllListeners();
     }
 }
