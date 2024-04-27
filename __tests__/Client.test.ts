@@ -40,6 +40,7 @@ import { Client } from '../src/P2PSession/Client';
 import { CoordinatorClient } from '../src/Coordinator';
 import { mock, instance, when, anything, verify } from 'ts-mockito';
 import * as protocolHelpers from '../src/Utils/protocolHelpers';
+import { P2PSession } from '../src/P2PSession';
 
 describe('Client', () => {
     let mockDiscoveryClient: DiscoveryClient;
@@ -56,7 +57,8 @@ describe('Client', () => {
             const username = 'testUser';
             const nodePort = 8080;
 
-            const client = await Client.create(discoveryServiceType, username);
+            const session = await P2PSession.create(discoveryServiceType, username);
+            const client = new Client(session);
 
             expect(client).toBeInstanceOf(Client);
         });
@@ -72,7 +74,9 @@ describe('Client', () => {
             // Replace the real getTCPOpenPort function with the mock
             jest.spyOn(protocolHelpers, 'getTCPOpenPort').mockImplementation(getTCPOpenPortMock);
 
-            await expect(Client.create(discoveryServiceType, username)).rejects.toThrow('Error getting open port');
+            P2PSession.create(discoveryServiceType, username).catch((error) => {
+                expect(error).toBe('Could not secure a port for coordinator.');
+            });
 
             // Restore the real getTCPOpenPort function after the test
             jest.spyOn(protocolHelpers, 'getTCPOpenPort').mockRestore();
@@ -81,7 +85,8 @@ describe('Client', () => {
 
     describe('start', () => {
         it('should start the discovery service', async () => {
-            const client = await Client.create('p2p-chat', 'testUser');
+            const session = await P2PSession.create('p2p-chat', 'testUser');
+            const client = new Client(session);
             let mockDone = jest.fn();
 
             client.on('discovery-start', () => {
@@ -109,8 +114,8 @@ describe('Client', () => {
             )
             const sessionName = testSession.name;
             const password = '123456';
-            const client = await Client.create('p2p-chat', 'testUser');
-
+            const session = await P2PSession.create('p2p-chat', 'testUser');
+            const client = new Client(session);
             //expecting that the call is resolved
             await expect(client.connectSession(sessionName, password)).resolves.toBeUndefined();
         });

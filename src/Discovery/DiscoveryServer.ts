@@ -26,14 +26,14 @@ export class DiscoveryServer {
      * @param serviceType - The type of the service to publish.
      * @param txtRecord - The TXT record to publish with the service.
      */
-    private constructor(port: number, serviceName: string, serviceType: string, txtRecord: DiscoveryServerTxtRecord) {
+    public constructor(port: number, serviceName: string, serviceType: string, txtRecord: DiscoveryServerTxtRecord) {
         this.zeroconf = this.initZeroconf();
         this.zeroconfPort = port;
         this.serviceName = serviceName;
         this.serviceType = serviceType;
         this.txtRecord = txtRecord;
         this.eventEmitter = new EventEmitter();
-        console.log('[DiscoveryServer] constructor: ', 'created new DiscoveryServer');
+        // console.log('[DiscoveryServer] constructor: ', 'created new DiscoveryServer');
     }
 
     /**
@@ -52,29 +52,13 @@ export class DiscoveryServer {
     }
 
     /**
-     * Create a new instance of DiscoveryServer.
-     * @param serviceName - The name of the service to publish.
-     * @param serviceType - The type of the service to publish.
-     * @param txtRecord - The TXT record to publish with the service.
-     * @returns A Promise that resolves with the new instance of DiscoveryServer.
-     * @throws An error if the zeroconf server cannot be initialized due to not being able to secure a port.
-     */
-    public static async create(serviceName: string, serviceType: string, txtRecord: DiscoveryServerTxtRecord): Promise<DiscoveryServer> {
-        let port = await getTCPOpenPort(5330).catch((reason) => {
-            console.warn('[DiscoveryServer] create - ', 'Error getting open port: ', reason);
-            return Promise.reject(reason);
-        }); //Using Port 5330 as the default port for discovery. If not usable, will use a random port.
-        return Promise.resolve(new DiscoveryServer(port, serviceName, serviceType, txtRecord));
-    }
-
-    /**
      * Start the zeroconf server and publish the service.
      */
     public start() : void {
         let txtRecord = {...this.txtRecord};
         this.zeroconf.publishService(this.serviceType, this._protocol, this._domain, this.serviceName, this.zeroconfPort, txtRecord);
         this.eventEmitter.emit('published');
-        console.log('[DiscoveryServer] start - ', 'zeroconf published');
+        // console.log('[DiscoveryServer] start - ', 'zeroconf published');
     }
 
     /**
@@ -83,7 +67,7 @@ export class DiscoveryServer {
     public stop() : void {
         this.zeroconf.unpublishService(this.serviceName);
         this.eventEmitter.emit('unpublished');
-        console.log('[DiscoveryServer] stop - ', 'zeroconf unpublished');
+        // console.log('[DiscoveryServer] stop - ', 'zeroconf unpublished');
     }
 
     /**

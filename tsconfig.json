@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "stripInternal": true,
     "rootDir": ".",
     "paths": {
       "react-native-secure-p2p": ["./src/index"]

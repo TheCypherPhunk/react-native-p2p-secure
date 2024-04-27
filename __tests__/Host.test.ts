@@ -44,6 +44,8 @@ import { Host } from '../src/P2PSession/Host';
 import { mock, instance, when, anything, verify } from 'ts-mockito';
 import * as protocolHelpers from '../src/Utils/protocolHelpers';
 import { Client } from '../src/P2PSession';
+import { P2PSession } from '../src/P2PSession';
+import { P2PHost } from '../src/P2PSession/Host';
 
 describe('Host', () => {
 
@@ -52,8 +54,8 @@ describe('Host', () => {
             const discoveryServiceType = 'p2p-chat';
             const username = 'testUser';
 
-            const host = await Host.create(discoveryServiceType);
-
+            const session = await P2PSession.create(discoveryServiceType);
+            const host = new P2PHost(session);
             expect(host).toBeInstanceOf(Host);
         });
     });
@@ -62,7 +64,8 @@ describe('Host', () => {
         it('should start the host', async () => {
             const discoveryServiceType = 'p2p-chat';
             const username = 'testUser';
-            const host = await Host.create(discoveryServiceType);
+            const session = await P2PSession.create(discoveryServiceType);
+            const host = new P2PHost(session);
 
             let mockDone = jest.fn();
 
@@ -81,10 +84,12 @@ describe('Host', () => {
         it('should return the neighbor status', async () => {
             const discoveryServiceType = 'p2p-chat';
             const username = 'testUser';
-            const host = await Host.create(discoveryServiceType);
+            const session = await P2PSession.create(discoveryServiceType);
+            const host = new P2PHost(session);
             host.start();
 
-            let client = await Client.create(discoveryServiceType, 'client');
+            let client_sess = await P2PSession.create(discoveryServiceType, 'client');
+            let client = new Client(client_sess);
 
             client.start();
 
@@ -120,7 +125,8 @@ describe('Host', () => {
         it('should return the session passcode', async () => {
             const discoveryServiceType = 'p2p-chat';
             const username = 'testUser';
-            const host = await Host.create(discoveryServiceType);
+            const session = await P2PSession.create(discoveryServiceType);
+            const host = new P2PHost(session);
 
             const passcode = host.sessionPasscode;
 
@@ -132,9 +138,10 @@ describe('Host', () => {
         it('should return the identifier string', async () => {
             const discoveryServiceType = 'p2p-chat';
             const username = 'testUser';
-            const host = await Host.create(discoveryServiceType);
+            const session = await P2PSession.create(discoveryServiceType);
+            const host = new P2PHost(session);
 
-            const identifier = host.identifierString;
+            const identifier = host.getIdentifier();
 
             expect(identifier).toBeDefined();
         });

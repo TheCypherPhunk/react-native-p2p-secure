@@ -27,10 +27,13 @@ export class Client extends P2PSession {
      * @remarks
      * This constructor is intended to be used internally by the Client class and should not be called directly.
      */
-    private constructor(Discovery: DiscoveryClient, Coordinator: CoordinatorClient, sessionName: string, nodePort: number) {
-        super(sessionName, nodePort);
-        this.Discovery = Discovery;
-        this.Coordinator = Coordinator;
+    public constructor(session: P2PSession) {
+        super(session.getIdentifier(), session.getNodePort(), session.getCoordinatorPort(), session.getDiscoveryPort(), session.getDiscoveryServiceType(), session.getCoordinatorKeys(), session.getNodeKeys());
+
+        this.Discovery = new DiscoveryClient(this.discoveryServiceType);
+
+        
+        this.Coordinator = new CoordinatorClient(this.identifier, this.coordinatorKeys);
 
         this.Discovery.on('start', () => {
             // console.log('[Session] start - ', 'Discovery started');
@@ -74,37 +77,6 @@ export class Client extends P2PSession {
             // console.log('[Session] closed - ', 'Coordinator closed');
             this.eventEmitter.emit('coordinator-disconnected');
         });
-    }
-
-    /**
-    * Creates a new instance of the Client class.
-    * @param discoveryServiceType - The type of the discovery service.
-    * @param username - The username for the client, this is optional. If not provided, a random username will be generated.
-    * @returns A promise that resolves with the created Client instance.
-    * 
-    * @throws If there is an error getting an open port, the promise will be rejected with the error.
-    * 
-    * @example
-    * ```typescript
-    * let client = await Client.create('p2p-chat');
-    * ```
-    */
-    public static async create(discoveryServiceType: string, username?: string, ) {
-        // console.log('[Session] create - ', 'Creating Client');
-        let identifier = username == null? proquint.encode(crypto.randomBytes(4)) : username;
-        // console.log('[Session] create - ', 'Identifier: ', identifier);
-
-        // console.log('[Session] create - ', 'Generating Device IP')
-
-        let nodePort = await getTCPOpenPort().catch((error) => {  
-            // console.log('[Session] create - ', 'Error getting open port: ', error);
-            return Promise.reject(error);
-        });
-
-        let discoveryClient = new DiscoveryClient(discoveryServiceType);
-        let coordinatorClient = await CoordinatorClient.create(identifier);
-        return new Client(discoveryClient, coordinatorClient, identifier, nodePort);
-        
     }
 
     /**

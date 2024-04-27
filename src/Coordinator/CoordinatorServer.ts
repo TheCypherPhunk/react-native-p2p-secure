@@ -70,11 +70,6 @@ export class CoordinatorServer {
    private eventEmitter: EventEmitter;
 
    /**
-    * The length of the RSA key in bits.
-    */
-   static readonly rsaKeyLength = 2048;
-
-   /**
     * The maximum number of SRP (Secure Remote Password) authentication retries allowed.
     */
    static readonly maxSRPRetrys = 3;
@@ -84,34 +79,6 @@ export class CoordinatorServer {
         return this.port;
     }
 
-     /**
-     * Creates a new instance of the `CoordinatorServer` class.
-     * @param sessionName The name of the session.
-     * @param nodePort The port number of the node server.
-     * @returns A promise that resolves with a new `CoordinatorServer` instance.
-     * @throws If a port for authentication cannot be secured.
-     */
-    public static async create(sessionName: string, nodePort: number) : Promise<CoordinatorServer> {
-        // console.log('[CoordinatorServer] create - ', 'Creating CoordinatorServer');
-
-        let port: number;
-        try {
-            port = await getTCPOpenPort();
-        } catch (error) {
-            // console.log('[CoordinatorServer] create - ', 'Error: Could not secure a port for authentication.');
-            return Promise.reject('Could not secure a port for authentication.');
-        }
-
-        // console.log('[CoordinatorServer] create - ', 'Port: ', port);
-
-        // console.log('[CoordinatorServer] create - ', 'Generating Keys');
-        let rsaKeys = forge.pki.rsa.generateKeyPair(CoordinatorServer.rsaKeyLength);
-        // console.log('[CoordinatorServer] create - ', 'Keys Generated');
-
-
-        return new CoordinatorServer(sessionName, port, rsaKeys, nodePort);
-    }
-
     /**
     * Constructs a new instance of the `CoordinatorServer` class.
     * @param sessionName The name of the session.
@@ -119,7 +86,7 @@ export class CoordinatorServer {
     * @param rsaKeys The RSA key pair used for encryption and decryption.
     * @param nodePort The port number of the node server.
     */
-    private constructor(sessionName: string, port: number, rsaKeys: forge.pki.rsa.KeyPair, nodePort: number) {
+    public constructor(sessionName: string, port: number, rsaKeys: forge.pki.rsa.KeyPair, nodePort: number) {
         // console.log('[CoordinatorServer] constructor - ', 'Constructing CoordinatorServer')
 
         this.sessionName = sessionName;

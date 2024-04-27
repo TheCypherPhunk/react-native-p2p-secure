@@ -28,10 +28,16 @@ export class Host extends P2PSession {
      * This constructor is private and should not be called directly.
      * To create a new Host instance, use the static create method.
      */
-    private constructor(Discovery: DiscoveryServer, Coordinator: CoordinatorServer, sessionName: string, nodePort: number) {
-        super(sessionName, nodePort);
-        this.Discovery = Discovery;
-        this.Coordinator = Coordinator;
+    public constructor(session: P2PSession) {
+        super(session.getIdentifier(), session.getNodePort(), session.getCoordinatorPort(), session.getDiscoveryPort(), session.getDiscoveryServiceType(), session.getCoordinatorKeys(), session.getNodeKeys());
+
+        this.Coordinator = new CoordinatorServer(this.identifier, this.coordinatorPort, this.coordinatorKeys, this.nodePort);
+
+        let txtRecord: DiscoveryServerTxtRecord = {
+            "coordinatorPort": this.coordinatorPort,
+        }
+    
+        this.Discovery = new DiscoveryServer(this.discoveryPort, this.identifier, this.discoveryServiceType, txtRecord);
 
         this.Coordinator.on('connection-attempt', (username) => {
             // console.log('[Host] connection-attempt - ', 'Connection attempt: ', username);
@@ -73,41 +79,45 @@ export class Host extends P2PSession {
             this.eventEmitter.emit('discovery-error', error);
         });
 
-    }
-
-    /**
-     * Creates a new Host instance.
-     * @param discoveryServiceType - The type of the discovery service.
-     * @param username - The username of the host.
-     * @returns - A promise that resolves with the created Host instance.
-     */
-    public static async create(discoveryServiceType: string, username?: string) {
-        // console.log('[Host] create - ', 'Creating Host');
-        let identifier = username == null? proquint.encode(crypto.randomBytes(4)) : username;
-        // console.log('[Host] create - ', 'Identifier: ', identifier);
-
-        // console.log('[Host] create - ', 'Generating Device IP')
-
-        let nodePort = await getTCPOpenPort().catch((error) => {  
-            console.error('[Host] create - ', 'Error getting open port: ', error);
-            return Promise.reject(error);
+        this.Coordinator.on('connection-attempt', (username) => {
+            // console.log('[Host] connection-attempt - ', 'Connection attempt: ', username);
+            this.eventEmitter.emit('coordinator-connection-start', username);
         });
 
-        let coordinatorServer = await CoordinatorServer.create(identifier, nodePort).catch((error) => {
-            console.error('[Host] ' + 'create - ', 'Error creating coordinator server: ', error);
-            return Promise.reject(error);
-        });
-    
-        let txtRecord: DiscoveryServerTxtRecord = {
-            "coordinatorPort": coordinatorServer.tcpPort,
-        }
-    
-        let discoveryServer = await DiscoveryServer.create(identifier, discoveryServiceType, txtRecord).catch((error) => {
-            console.error('[Host] ' + 'create - ', 'Error creating discovery server: ', error);
-            return Promise.reject(error);
+        this.Coordinator.on('connection-attempt-fail', ({username, error}) => {
+            // console.log('[Host] connection-attempt-fail - ', 'Connection attempt failed: ', username, error);
+            this.eventEmitter.emit('coordinator-connection-fail', username, error);
         });
 
-        return new Host(discoveryServer, coordinatorServer, identifier, nodePort);
+        this.Coordinator.on('connected', (user) => {
+            // console.log('[Host] connected - ', 'Connected to user: ', user.userName);
+            this.eventEmitter.emit('coordinator-connected', user.userName);
+        });
+
+        this.Coordinator.on('disconnected', (user) => {
+            // console.log('[Host] disconnected - ', 'Disconnected from user: ', user);
+            this.eventEmitter.emit('coordinator-disconnected', user);
+        });
+
+        this.Coordinator.on('reconnected', (user) => {
+            // console.log('[Host] reconnected - ', 'Reconnected to user: ', user);
+            this.eventEmitter.emit('coordinator-reconnected', user);
+        });
+
+        this.Discovery.on('published', () => {
+            // console.log('[Host] published - ', 'Published discovery server');
+            this.eventEmitter.emit('discovery-published');
+        });
+
+        this.Discovery.on('unpublished', () => {
+            // console.log('[Host] unpublished - ', 'Unpublished discovery server');
+            this.eventEmitter.emit('discovery-unpublished');
+        });
+
+        this.Discovery.on('error', (error) => {
+            // console.log('[Host] error - ', 'Discovery server error: ', error);
+            this.eventEmitter.emit('discovery-error', error);
+        });
     }
 
     /**
@@ -231,14 +241,6 @@ export class Host extends P2PSession {
      */
     get sessionPasscode() {
         return (this.Coordinator as CoordinatorServer).passcode;
-    }
-
-    /**
-     * Returns the identifier for the host.
-     * @returns The identifier for the host.
-     */
-    get identifierString() {
-        return this.identifier;
     }
 
     public destroy(): void {

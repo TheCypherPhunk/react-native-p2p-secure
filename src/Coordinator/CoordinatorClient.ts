@@ -21,30 +21,15 @@ export class CoordinatorClient {
     private eventEmitter: EventEmitter;
     private tlsClient!: TLSClient;
 
-    static readonly rsaKeyLength = 2048;
     /**
      * Creates a new instance of the CoordinatorClient class.
      * @param identifier - The identifier for the client.
      * @param rsaKeys - The RSA key pair for encryption.
      */
-    private constructor(identifier: string, rsaKeys: forge.pki.rsa.KeyPair) {
+    public constructor(identifier: string, rsaKeys: forge.pki.rsa.KeyPair) {
         this.identifier = identifier;
         this.rsaKeys = rsaKeys;
         this.eventEmitter = new EventEmitter();
-    }
-
-    /**
-     * Creates a new instance of the CoordinatorClient class.
-     * @param identifier - The identifier for the client.
-     * @returns A promise that resolves with the created CoordinatorClient instance.
-     */
-    public static async create(identifier: string): Promise<CoordinatorClient> {
-        console.log('[CoordinatorClient] creating client');
-        console.log('[CoordinatorClient] generating RSA keys');
-        const rsaKeys = forge.pki.rsa.generateKeyPair(CoordinatorClient.rsaKeyLength);
-        console.log('[CoordinatorClient] generated RSA keys');
-
-        return new CoordinatorClient(identifier, rsaKeys);
     }
 
     /**
@@ -77,8 +62,8 @@ export class CoordinatorClient {
         return new Promise((resolve, reject) => {
             client.on('tls-connected', () => {
                 this.eventEmitter.emit('connected');
-                console.log('[CoordinatorClient] connected to server');
-                console.log('[CoordinatorClient] Starting SRP handshake');
+                // console.log('[CoordinatorClient] connected to server');
+                // console.log('[CoordinatorClient] Starting SRP handshake');
                 let client_handshake_1: SRPClientHandshake_1 = {
                     type: 'srp-handshake_1',
                     payload: srpClient.getRegistrationAndLoginData()
@@ -87,23 +72,23 @@ export class CoordinatorClient {
             });
 
             client.on('socket-closed', () => {
-                console.log('[CoordinatorClient] socket closed');
+                // console.log('[CoordinatorClient] socket closed');
                 this.eventEmitter.emit('disconnected');
                 client.destroy();
             });
 
             client.on('data', async (data: string) => {
-                console.log('[CoordinatorClient] data received from server: ', data);
+                // console.log('[CoordinatorClient] data received from server: ', data);
                 let d: SRPServerHandshake_1 | SRPServerHandshake_2 = JSON.parse(data);
                 //determine which type of response we got based on the possible types d has
                 if (d.type === 'srp-handshake_1') {
                     if (!d.payload) {
-                        console.log('[CoordinatorClient] error logging in or registering. Error from server: ', d.error);
+                        // console.log('[CoordinatorClient] error logging in or registering. Error from server: ', d.error);
                         this.eventEmitter.emit('error', d.error);
                     } else {
-                        console.log('[CoordinatorClient] received SRP handshake 1 from server');
+                        // console.log('[CoordinatorClient] received SRP handshake 1 from server');
                         if (d.status !== 'success') {
-                            console.log('[CoordinatorClient] error logging in or registering. Error from server: ', d.error);
+                            // console.log('[CoordinatorClient] error logging in or registering. Error from server: ', d.error);
                             this.eventEmitter.emit('error', d.error);
                         }
                         let sessionProof = srpClient.deriveSessionKey(d.payload!.serverEphermalKey);
@@ -120,18 +105,18 @@ export class CoordinatorClient {
                 } else {
                     if (!d.payload) {
                         this.eventEmitter.emit('error', d.error);
-                        console.log('[CoordinatorClient] error getting server session proof. Error from server: ', d.error);
+                        // console.log('[CoordinatorClient] error getting server session proof. Error from server: ', d.error);
                     } else {
-                        console.log('[CoordinatorClient] received SRP handshake 2 from server');
+                        // console.log('[CoordinatorClient] received SRP handshake 2 from server');
                         if (d.status !== 'success') {
                             this.eventEmitter.emit('error', d.error);
-                            console.log('[CoordinatorClient] error getting server session proof. Error from server: ', d.error);
+                            // console.log('[CoordinatorClient] error getting server session proof. Error from server: ', d.error);
                         }
                         let verified = srpClient.verifySession(d.payload!.serverProof);
                         if (!verified) {
                             this.eventEmitter.emit('error', 'Could not verify server, please try again');
                         } else {
-                            console.log('[CoordinatorClient] session verified');
+                            // console.log('[CoordinatorClient] session verified');
                             let iv = forge.util.decode64(d.payload!.iv);
                             let encrypted = forge.util.decode64(d.payload!.encrypted);
                                                             let key = srpClient.getSessionKey();

@@ -10,11 +10,11 @@ The first secure multipeer library to enable p2p communication between Android/i
 - [Usage](#usage)
     - [Client Example](#client-example)
     - [Host Example](#host-example)
-    - [P2PNode Example](#p2pnode-example)
+    - [P2PSession Example](#P2PSession-example)
 - [API](#api)
     - [P2PHost](#p2phost)
     - [P2PClient](#p2pclient)
-    - [P2PNode](#p2pnode)
+    - [P2PSession](#P2PSession)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -71,7 +71,7 @@ It is recommended to add the following command to the `scripts` object in `packa
 The following steps are installation requirements for React Native >= 0.60:  
 ### Android Platform:
 
-  Modify your **`android/build.gradle`** configuration to match `minSdkVersion = 21` for react-native-tcp-socket support:
+  Modify your **`android/build.gradle`** configuration to be `minSdkVersion = 21` or more for react-native-tcp-socket support:
   ```
   buildscript {
     ext {
@@ -92,7 +92,7 @@ The following steps are installation requirements for React Native >= 0.60:
 
     For discovery on iOS 14+, you will be required to specify the discovery services you want to scan for and a description for what you're using them.
 
-    In your `info.plist` add the following strings:
+    In your `ios/{project_name}/info.plist` add the following strings:
 
     ```xml
     <key>NSBonjourServices</key>
@@ -114,7 +114,7 @@ The following steps are installation requirements for React Native >= 0.60:
 Import the library:
 
 ```js
-import {P2PHost, P2PClient, P2PNode} from 'react-native-p2p-secure';
+import {P2PHost, P2PClient, P2PSession} from 'react-native-p2p-secure';
 ```
 
 ### Client Example:
@@ -126,27 +126,28 @@ const [sessionID, setSessionID] = useState<string | null>(null);
 
 useEffect(() => {
     //myservice is the name of the service setup in info.plist in the iOS platform installation step
-    P2PClient.create('myservice').then((session) => { 
-        setClient(session);
-        setSessionPass(session.sessionPasscode);
-        setSessionID(session.identifierString);
+    P2PSession.create('myservice').then((session) => { 
+        let client = new P2PClient(session);
+        setClient(client);
+        setSessionPass(client.sessionPasscode);
+        setSessionID(client.getIdentifier();
 
-        session.on('discovery-service-list-update', (updatedSessions) => {// to capture changes in active sessions during discovery
+        client.on('discovery-service-list-update', (updatedSessions) => {// to capture changes in active sessions during discovery
             console.log('sessions', updatedSessions);
         })
-        session.on('session-started', () => {// emitted when the host starts the p2p session
+        client.on('session-started', () => {// emitted when the host starts the p2p session
             console.log('session started');
         });
-        session.on('coordinator-error', (error) => {// emitted when an error occurs during connection before the p2p session starts. This usually captures authentication, collision, and any other errors happening during the connection phase before the p2p session starts.
+        client.on('coordinator-error', (error) => {// emitted when an error occurs during connection before the p2p session starts. This usually captures authentication, collision, and any other errors happening during the connection phase before the p2p session starts.
             console.log('Error connecting to session', error);
         });
-        session.on('coordinator-disconnected', () => {// emitted when the host disconnects from the session before starting the p2p session
+        client.on('coordinator-disconnected', () => {// emitted when the host disconnects from the session before starting the p2p session
             console.log('Disconnected from coordinator');
         });
-        session.on('coordinator-authenticated', () => { // emitted when the client successfully authenticates with the host
+        client.on('coordinator-authenticated', () => { // emitted when the client successfully authenticates with the host
             console.log('Authenticated with coordinator');
         });
-        session.start(); // starts the discovery process
+        client.start(); // starts the discovery process
     });
 }, []);
 ```
@@ -166,30 +167,31 @@ const [server, setServer] = useState<P2PHost | null>(null);
 const [sessionPass, setSessionPass] = useState<string | null>(null);
 const [sessionID, setSessionID] = useState<string | null>(null);
 useEffect(() => {
-    P2PHost.create('myservice').then((session) => {
-        setServer(session);
-        setSessionPass(session.sessionPasscode);
-        setSessionID(session.identifierString);
+    P2PSession.create('myservice').then((session) => {
+        let server = new P2PHost(session);
+        setServer(server);
+        setSessionPass(server.sessionPasscode);
+        setSessionID(server.identifierString);
 
-        session.on('coordinator-connected', (neighbor) => { // emitted when a client successfully connects to the host
+        server.on('coordinator-connected', (neighbor) => { // emitted when a client successfully connects to the host
             console.log('connected to', neighbor);
         });
-        session.on('coordinator-disconnected', (neighbor) => { // emitted when a client disconnects from the host after authentication but before the p2p session starts
+        server.on('coordinator-disconnected', (neighbor) => { // emitted when a client disconnects from the host after authentication but before the p2p session starts
             console.log('disconnected from', neighbor);
         });
-        session.on('coordinator-reconnected', (neighbor) => { // emitted when a client reconnects to the host after disconnection
+        server.on('coordinator-reconnected', (neighbor) => { // emitted when a client reconnects to the host after disconnection
             console.log('reconnected to', neighbor);
         });
-        session.on('coordinator-connection-start', (neighbor) => { // emitted when a client starts connecting to the host
+        server.on('coordinator-connection-start', (neighbor) => { // emitted when a client starts connecting to the host
             console.log('connecting to', neighbor);
         });
-        session.on('coordinator-connection-fail', (neighbor, error) => { // emitted when a client fails to connect to the host
+        server.on('coordinator-connection-fail', (neighbor, error) => { // emitted when a client fails to connect to the host
             console.log('failed to connect to', neighbor, error);
         });
-        session.on('session-started', () => { // emitted when the host starts the p2p session
+        server.on('session-started', () => { // emitted when the host starts the p2p session
             console.log('session started');
         });
-        session.start(); // starts advertising the service to be discovered by clients
+        server.start(); // starts advertising the service to be discovered by clients
     });
 }, []);
 ```
@@ -200,40 +202,40 @@ server.startP2PSession().then(() => { // starts the p2p session
 ```
 For a functional example, see the [example](./example/p2p_example/screens/HostScreen.tsx) in the example folder.
 
-### P2PNode Example:
-Once the p2p session has been successfully created, the host and clients can communicate with each other. At this point, the host and clients can can be casted to their shared base class `P2PNode` for more straighfoward usage. For example:
+### P2PSession Example:
+Once the p2p session has been successfully created, the host and clients can communicate with each other. At this point, the host and clients can can be casted to their shared base class `P2PSession` for more straighfoward usage. For example:
 
 ```js
-let node = server as P2PNode; // server is the P2PHost object
+let node = server as P2PSession; // server is the P2PHost object
 ```
 or
 ```js
-let node = client as P2PNode; // client is the P2PClient object
+let node = client as P2PSession; // client is the P2PClient object
 ```
 Then:
 ```jsx
 const [chatter, setChatter] = useState([]);
-const [neighborStatus, setNeighborStatus] = useState<[{username: string, status: string}]>(nodeContext.getNeighborStatus());
+const [neighborStatus, setNeighborStatus] = useState<[{username: string, status: string}]>(p2pSessionContext.getNeighborStatus());
 
 useEffect(() => {
-    nodeContext.onNodeEvent('node-message', (message:string, sender:string) => {
+    p2pSessionContext.onNodeEvent('node-message', (message:string, sender:string) => {
         console.log('message', message, 'sender', sender);
         updateChatter(sender, message);
     });
 
-    nodeContext.onNodeEvent('node-disconnected', (username: string) => {
+    p2pSessionContext.onNodeEvent('node-disconnected', (username: string) => {
         console.log('Connection Closed', 'The connection to ' + username + ' has been closed. You will need to reconnect.');        
-        setNeighborStatus(nodeContext.getNeighborStatus());
+        setNeighborStatus(p2pSessionContext.getNeighborStatus());
     });    
 
-    nodeContext.onNodeEvent('node-connected', (username: string) => {
+    p2pSessionContext.onNodeEvent('node-connected', (username: string) => {
         console.log('Connection Open', 'The connection to ' + username + ' has been established.');
-        setNeighborStatus(nodeContext.getNeighborStatus());
+        setNeighborStatus(p2pSessionContext.getNeighborStatus());
     });
 
-    nodeContext.onNodeEvent('node-reconnected', (username: string) => {
+    p2pSessionContext.onNodeEvent('node-reconnected', (username: string) => {
         console.log('Connection Reopened', 'The connection to ' + username + ' has been reestablished.');
-        setNeighborStatus(nodeContext.getNeighborStatus());
+        setNeighborStatus(p2pSessionContext.getNeighborStatus());
     });
 
 }, []);
@@ -249,15 +251,16 @@ For a functional example, see the [example](./example/p2p_example/screens/ChatSc
 
 ### P2PHost
 
-### `P2PHost.create(discoveryServiceType: string, username?: string): Promise<P2PHost>`
+### `P2PHost.create(discoveryServiceType: string, username?: string): Promise<P2PSession>`
 
-Creates a new instance of the `P2PHost` class. Returns a promise that resolves with the created `P2PHost` instance. The `discoveryServiceType` parameter is the type of service that the host will be advertising during the discovery process. The `username` parameter is optional and is used to identify the host in the p2p network. 
+Returns a Promise of a new instance of the `P2PSession` parent class. The `discoveryServiceType` parameter is the type of service that the host will be advertising during the discovery process. The `username` parameter is optional and is used to identify the host in the p2p network. 
 - `discoveryServiceType`: should be the same as the string used in the `info.plist` file in the iOS platform installation step above.
 - `username`: should be a unique string that identifies the host in the p2p network. If not provided, a random string will be generated.
 
 Example:
 ```typescript
-let host = await P2PHost.create('myservice');
+let session: P2PSession = await P2PSession.create('myservice');
+let host = new P2PHost(session);
 ```
 ### `P2PHost.start(): void`
 Starts the discovery service and begins advertising the service.
@@ -272,17 +275,6 @@ await host.startP2PSession();
 
 ### `P2PHost.getNeighbors(): string[]`
 Gets the neighbors of the host node in the active p2p network.
-
-### `P2PHost.stop(): void`
-Stops the host. 
-
-Determining workspace structure
-
-Deciding which workspace information to collect
-
-Gathering workspace info
-
-Sure, here's the continuation of the API documentation for the `P2PHost` class:
 
 ### `P2PHost.on(event: string, callback: (...args: any[]) => void): void`
 
@@ -312,7 +304,12 @@ Available events:
 
 Returns the passcode for the session. This passcode should be shared (offline) with clients to allow them to connect to the session.
 
-### `P2PHost.identifierString: string`
+Example:
+```typescript
+let passcode = host.sessionPasscode;
+```
+
+### `P2PHost.getIdentifier(): string`
 
 Returns the identifier for the host. This is useful when the username is randomly generated.
 
@@ -324,13 +321,14 @@ Destroys the host instance. This method should be called when the host is no lon
 
 ### `P2PClient.create(discoveryServiceType: string, username?: string): Promise<P2PClient>`
 
-Creates a new instance of the `P2PClient` class. Returns a promise that resolves with the created `P2PClient` instance. The `discoveryServiceType` parameter is the type of service that the client will be looking for during the discovery process. The `username` parameter is optional and is used to identify the client in the p2p network. 
+Returns a Promise of a new instance of the `P2PSession` parent class. The `discoveryServiceType` parameter is the type of service that the client will be looking for during the discovery process. The `username` parameter is optional and is used to identify the client in the p2p network. 
 - `discoveryServiceType`: should be the same as the string used in the `info.plist` file in the iOS platform installation step above.
 - `username`: should be a unique string that identifies the client in the p2p network. If not provided, a random string will be generated.
 
 Example:
 ```typescript
-let client = await P2PClient.create('myservice');
+let session: P2PSession = await P2PClient.create('myservice');
+let client = new P2PClient(session);
 ```
 
 ### `P2PClient.start(): void`
@@ -381,7 +379,7 @@ Available events:
 - `coordinator-error`: Emitted when an error occurs in the coordinator.
 - `coordinator-disconnected`: Emitted when the coordinator disconnects.
 
-### `P2PClient.identifierString: string`
+### `P2PClient.getIdentifier(): string`
 
 Gets the username used to identify the client in the p2p network. Useful in cases when the username is randomly generated.
 
@@ -389,22 +387,29 @@ Gets the username used to identify the client in the p2p network. Useful in case
 
 Destroys the client. This method should be called when the client is no longer needed. After calling this method, the client instance should be discarded.
 
-### P2PNode
+### P2PSession
 This is the base class for both `P2PHost` and `P2PClient`. It provides an easier interface for sending messages and managing connections in the p2p network.
 
-To use this class, you can cast a `P2PHost` or `P2PClient` instance to a `P2PNode` instance:
+To use this class, you can cast a `P2PHost` or `P2PClient` instance to a `P2PSession` instance:
 
 ```typescript
-let node = host as P2PNode;
+let node = host as P2PSession;
 ```
+### `P2PSession.create(sessionType: string, sessionName?: string): Promise<P2PSession>`
 
-### `P2PNode.getNeighbors(): string[]`
+Creates a new instance of the `P2PSession` class. The `sessionType` parameter is the type of session to create. The `sessionName` parameter is optional and is used to identify the session.
+
+### `P2PSession.getNeighbors(): string[]`
 
 Gets the neighbors of the node in the active p2p network.
 
-### `P2PNode.onNodeEvent(event: string, callback: (...args: any[]) => void): void`
+### `P2PSession.getNeighborStatus(): [{username: string, status: string}]`
 
-Registers a listener function to be called when the specified event is emitted.
+Gets a list of neighbors and their connection status.
+
+### `P2PSession.onNodeEvent(event: string, callback: (...args: any[]) => void): void`
+
+Registers a listener function to be called when the specified event is emitted. This may be considered to be a filtered version of the `on` method, filtering for events that are specific to the actual P2P communication session.
 
 - `event`: The event to listen for.
 - `callback`: A callback function to be called when the event is emitted.
@@ -425,7 +430,7 @@ node.on('node-connected', (nodeId) => {
 });
 ```
 
-### `P2PNode.sendMessage(message: string, receiver: string): void`
+### `P2PSession.sendMessage(message: string, receiver: string): void`
 
 Sends a message to a specific neighbor node in the p2p network.
 
@@ -438,7 +443,7 @@ Example:
 node.sendMessage('Hello neighbor!', 'neighborId');
 ```
 
-### `P2PNode.broadcastMessage(message: string): void`
+### `P2PSession.broadcastMessage(message: string): void`
 
 Broadcasts a message to all neighbor nodes in the p2p network.
 
@@ -450,11 +455,11 @@ Example:
 node.broadcastMessage('Hello everyone!');
 ```
 
-### `P2PNode.identifierString: string`
+### `P2PSession.getIdentifier(): string`
 
 Returns the identifier for the node.
 
-### `P2PNode.destroy(): void`
+### `P2PSession.destroy(): void`
 
 Destroys the node instance. This method should be called when the node is no longer needed. After calling this method, the node instance should be discarded.
 
