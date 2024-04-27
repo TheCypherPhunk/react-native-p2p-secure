@@ -239,7 +239,7 @@ export class Host extends P2PSession {
      * Returns the passcode for the session.
      * @returns The passcode for the session.
      */
-    get sessionPasscode() {
+    public getSessionPasscode() {
         return (this.Coordinator as CoordinatorServer).passcode;
     }
 

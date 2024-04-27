@@ -170,7 +170,7 @@ useEffect(() => {
     P2PSession.create('myservice').then((session) => {
         let server = new P2PHost(session);
         setServer(server);
-        setSessionPass(server.sessionPasscode);
+        setSessionPass(server.getSessionPasscode());
         setSessionID(server.identifierString);
 
         server.on('coordinator-connected', (neighbor) => { // emitted when a client successfully connects to the host
@@ -300,7 +300,7 @@ Available events:
 - `'discovery-unpublished'`: Emitted when the discovery server unpublishes the service.
 - `'discovery-error'`: Emitted when an error occurs in the discovery server.
 
-### `P2PHost.sessionPasscode: string`
+### `P2PHost.getSessionPasscode(): string`
 
 Returns the passcode for the session. This passcode should be shared (offline) with clients to allow them to connect to the session.
 
