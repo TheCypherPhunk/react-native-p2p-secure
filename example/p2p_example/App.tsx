@@ -10,8 +10,8 @@ import React, { useState } from 'react';
 import HostScreen from "./screens/HostScreen";
 import JoinScreen from "./screens/JoinScreen";
 import ChatScreen from "./screens/ChatPage";
-import { NodeContext } from "./P2PContexts";
-import { P2PNode } from "react-native-p2p-secure";
+import { P2PSessionContext } from "./P2PContexts";
+import { P2PSession } from "react-native-p2p-secure";
 
 function HomeScreen({navigation}: {navigation: NavigationProp<any>}) {
   return (
@@ -27,9 +27,9 @@ function HomeScreen({navigation}: {navigation: NavigationProp<any>}) {
 }
 const Stack = createNativeStackNavigator();
 export default function App() {
-  const [nodeContext, setNodeContext] = useState(null as unknown as P2PNode);
+  const [p2pSessionContext, setP2PSessionContext] = useState(null as unknown as P2PSession);
   return (
-    <NodeContext.Provider value={[nodeContext, setNodeContext]}>
+    <P2PSessionContext.Provider value={[p2pSessionContext, setP2PSessionContext]}>
       <NavigationContainer>
       <Stack.Navigator>
           {/*Define our routes*/}
@@ -39,7 +39,7 @@ export default function App() {
           <Stack.Screen name="Chat" component={ChatScreen} />
         </Stack.Navigator>
       </NavigationContainer>
-    </NodeContext.Provider>
+    </P2PSessionContext.Provider>
   );
 }
 

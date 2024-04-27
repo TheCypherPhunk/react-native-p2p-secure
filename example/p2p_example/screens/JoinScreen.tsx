@@ -15,9 +15,9 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native'
-import { P2PClient } from 'react-native-p2p-secure'
+import { P2PClient, P2PSession } from 'react-native-p2p-secure'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
-import { NodeContext } from '../P2PContexts'
+import { P2PSessionContext } from '../P2PContexts'
 import React from 'react';
 export default function JoinScreen({route, navigation}: any) {
 
@@ -43,38 +43,39 @@ export default function JoinScreen({route, navigation}: any) {
         value,
         setValue,
     });
-    const [_, setNodeContext] = useContext(NodeContext);
+    const [_, setNodeContext] = useContext(P2PSessionContext);
     const [disconnectedModalVisible, setDisconnectedModalVisible] = useState(false);
 
     useEffect(() => {
-        P2PClient.create('p2pcomms').then((session) => {
-            setClient(session);
-            setSessionID(session.identifierString);
+        P2PSession.create('p2pcomms').then((session) => {
+            let client = new P2PClient(session);
+            setClient(client);
+            setSessionID(session.getIdentifier());
 
-            session.on('discovery-service-list-update', (updatedSessions) => {
+            client.on('discovery-service-list-update', (updatedSessions) => {
                 console.log('sessions', updatedSessions);
                 setSessions(sessions => [...updatedSessions]);
             })
-            session.on('session-started', () => {
+            client.on('session-started', () => {
                 setDisconnectedModalVisible(false);
                 setLoading(true);
                 navigation.replace('Chat', {sessionID, neighbors: nodeNeighbors})
             });
-            session.on('coordinator-error', (error) => {
+            client.on('coordinator-error', (error) => {
                 Alert.alert('Error', error);
                 console.log('Error connecting to session', error);
                 setLoading(false);
                 setValue('')
             });
-            session.on('coordinator-disconnected', () => {
+            client.on('coordinator-disconnected', () => {
                 console.log('Disconnected from coordinator');
                 setLoading(false);
                 setDisconnectedModalVisible(true);
             });
-            session.on('coordinator-authenticated', () => {
+            client.on('coordinator-authenticated', () => {
                 console.log('Authenticated with coordinator');
             });
-            session.start();
+            client.start();
             setLoading(false);
 
         });

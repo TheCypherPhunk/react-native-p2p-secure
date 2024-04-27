@@ -1,15 +1,15 @@
 import { createContext, useContext } from 'react';
-import { P2PNode } from 'react-native-p2p-secure'
+import { P2PSession } from 'react-native-p2p-secure'
 
-const NodeContext = createContext<[P2PNode|null, (value: P2PNode) => void]>([null, (value:P2PNode) => {}]);
+const P2PSessionContext = createContext<[P2PSession|null, (value: P2PSession) => void]>([null, (value:P2PSession) => {}]);
 
-const useNodeContext = () => {
-    const [currentNodeContext, _] = useContext(NodeContext);
-    if(!currentNodeContext) {
-        throw new Error('NodeContext must be used within a NodeProvider');
+const useP2PSessionContext = () => {
+    const [currentP2PSessionContext, _] = useContext(P2PSessionContext);
+    if(!currentP2PSessionContext) {
+        throw new Error('p2pSessionContext must be used within a p2pSessionProvider');
     }
-    return currentNodeContext;
+    return currentP2PSessionContext;
 }
 
-export { NodeContext, useNodeContext};
+export { P2PSessionContext as P2PSessionContext, useP2PSessionContext as useP2PSessionContext};
 

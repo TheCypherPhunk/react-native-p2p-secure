@@ -15,9 +15,9 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
-import { P2PHost } from 'react-native-p2p-secure'
+import { P2PSession, P2PHost } from 'react-native-p2p-secure'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
-import { NodeContext } from '../P2PContexts';
+import { P2PSessionContext } from '../P2PContexts';
 import React from 'react';
 
 
@@ -42,15 +42,16 @@ export default function HostScreen({route, navigation}: any) {
         setValue,
     });
 
-    const [_, setNodeContext] : [any, any] = useContext(NodeContext);
+    const [_, setNodeContext] : [any, any] = useContext(P2PSessionContext);
 
     useEffect(() => {
-            P2PHost.create('p2pcomms').then((session) => {
-                setServer(session);
-                setSessionPass(session.sessionPasscode);
-                setSessionID(session.identifierString);
+            P2PSession.create('p2pcomms').then((session) => {
+                let server = new P2PHost(session)
+                setServer(server);
+                setSessionPass(server.sessionPasscode);
+                setSessionID(server.getIdentifier());
                 
-                session.on('coordinator-connected', (neighbor) => {
+                server.on('coordinator-connected', (neighbor) => {
                     setConnectedNeighbors(connectedNeighbors => connectedNeighbors.map(n => {
                         if (n.username === neighbor) {
                             return {...n, connected: true, connecting: false}
@@ -59,7 +60,7 @@ export default function HostScreen({route, navigation}: any) {
                     }));
                     console.log('connectedNeighbors', connectedNeighbors);
                 });
-                session.on('coordinator-disconnected', (neighbor) => {
+                server.on('coordinator-disconnected', (neighbor) => {
                     setConnectedNeighbors(connectedNeighbors => connectedNeighbors.map(n => {
                         if (n.username === neighbor) {
                             return {...n, disconnected: true}
@@ -68,7 +69,7 @@ export default function HostScreen({route, navigation}: any) {
                     }));
                     console.log('coordinator-disconnected', neighbor);
                 });
-                session.on('coordinator-reconnected', (neighbor) => {
+                server.on('coordinator-reconnected', (neighbor) => {
                     setConnectedNeighbors(connectedNeighbors => connectedNeighbors.map(n => {
                         if (n.username === neighbor) {
                             return {...n, disconnected: false}
@@ -77,21 +78,21 @@ export default function HostScreen({route, navigation}: any) {
                     }));
                     console.log('coordinator-reconnected', neighbor);
                 });
-                session.on('coordinator-connection-start', (neighbor) => {
+                server.on('coordinator-connection-start', (neighbor) => {
                     setConnectedNeighbors(connectedNeighbors => connectedNeighbors.filter(n => n.username !== neighbor));
                     setConnectedNeighbors(connectedNeighbors => [...connectedNeighbors, {username: neighbor, connected: false, connecting: true, disconnected: false}]);
                     console.log('coordinator-connection-start', neighbor);
                 });
-                session.on('coordinator-connection-fail', (neighbor, error) => {
+                server.on('coordinator-connection-fail', (neighbor, error) => {
                     setConnectedNeighbors(connectedNeighbors => connectedNeighbors.filter(n => n.username !== neighbor));
                     console.log('coordinator-connection-fail', neighbor, error);
                     Alert.alert('Connection to ' + neighbor + ' failed.', error);
                 });
-                session.on('session-started', () => {
-                    setNodeContext(session);
+                server.on('session-started', () => {
+                    setNodeContext(server);
                     navigation.replace('Chat', {sessionID, neighbors: nodeNeighbors});
                 });
-                session.start();
+                server.start();
                 setLoading(false);
             }).catch((error: string | undefined) => {
                 Alert.alert('Error', error);

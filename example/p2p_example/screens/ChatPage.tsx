@@ -11,7 +11,7 @@ import {
     View 
  } from 'react-native';
 import { Text } from 'react-native';
-import { NodeContext, useNodeContext } from '../P2PContexts';
+import { P2PSessionContext, useP2PSessionContext } from '../P2PContexts';
 import React from 'react';
 import { HeaderBackButton } from '@react-navigation/elements';
 
@@ -24,7 +24,7 @@ export default function ChatScreen({route, navigation}: any) {
 
     const sessionID: string = route.params.sessionID;
     const neighbors: string[] = route.params.neighbors;
-    const nodeContext = useNodeContext();
+    const nodeContext = useP2PSessionContext();
 
     const [neighborStatus, setNeighborStatus] = useState<[{username: string, status: string}]>(nodeContext.getNeighborStatus());
 
@@ -81,7 +81,7 @@ export default function ChatScreen({route, navigation}: any) {
         }, [navigation])
 
     useEffect(() => {
-        const unsubscribe = navigation.addListener('beforeRemove', e => {
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
             e.preventDefault(); // Prevent default action
             unsubscribe() // Unsubscribe the event on first call to prevent infinite loop
             nodeContext.destroy();
