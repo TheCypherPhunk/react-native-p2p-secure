@@ -166,7 +166,8 @@ export class P2PSession {
      * Destroys the P2P Connection.
      */
     public destroy() {
-        this.node.destroy();
+        if(this.node)
+            this.node.destroy();
         this.eventEmitter.removeAllListeners();
     }
 
