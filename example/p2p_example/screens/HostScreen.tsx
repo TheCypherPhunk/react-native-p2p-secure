@@ -45,10 +45,10 @@ export default function HostScreen({route, navigation}: any) {
     const [_, setNodeContext] : [any, any] = useContext(P2PSessionContext);
 
     useEffect(() => {
-            P2PSession.create('p2pcomms').then((session) => {
+            P2PSession.create('p2pcomms').then((session: P2PSession) => {
                 let server = new P2PHost(session)
                 setServer(server);
-                setSessionPass(server.sessionPasscode);
+                setSessionPass(server.getSessionPasscode());
                 setSessionID(server.getIdentifier());
                 
                 server.on('coordinator-connected', (neighbor) => {
