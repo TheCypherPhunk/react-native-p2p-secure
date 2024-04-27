@@ -179,6 +179,13 @@ export class P2PSession {
     }
 
     /**
+     * Sets the identifier for the host/client.
+     * @param identifier The identifier for the host/client.
+     */
+    public setIdentifier(identifier: string) { 
+        this.identifier = identifier;
+    }
+    /**
      * Returns the port number that the node is listening on.
      * @returns The port number that the node is listening on.
      */

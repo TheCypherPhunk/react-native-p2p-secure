@@ -459,6 +459,10 @@ node.broadcastMessage('Hello everyone!');
 
 Returns the identifier for the node.
 
+### `P2PSession.setIdentifier(identifier: string): void`
+
+Sets the identifier for the node.
+
 ### `P2PSession.destroy(): void`
 
 Destroys the node instance. This method should be called when the node is no longer needed. After calling this method, the node instance should be discarded.
