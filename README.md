@@ -467,6 +467,9 @@ Sets the identifier for the node.
 
 Destroys the node instance. This method should be called when the node is no longer needed. After calling this method, the node instance should be discarded.
 
+## Motivation
+
+This library was motivated by supporting HRF Bounty #8 for creating an easier Multisig experience in an opensource BTC wallet. During research, no library supported creating a p2p multi-platform two-way communication layer between Android/iOS devices. Therefore, this package came to be as a complete solution to support the development of that bounty.
 
 ## Contributing
 
