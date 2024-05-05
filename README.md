@@ -64,7 +64,6 @@ It is recommended to add the following command to the `scripts` object in `packa
 
 ```json
   "scripts": {
-    ...,
     "postinstall": "./node_modules/.bin/rn-nodeify --install stream,buffer,crypto --hack"
   },
 ```
